@@ -1,15 +1,28 @@
 #!/bin/bash
 
-VERSION="1.20.1"
+echo "Obteniendo última versión estable de Paper…"
 
-echo "Buscando build más reciente…"
+VERSION=$(curl -s https://api.papermc.io/v2/projects/paper \
+  | jq -r '.versions[]' \
+  | grep -v "pre" \
+  | grep -v "rc" \
+  | sort -V \
+  | tail -n 1)
 
-LATEST_BUILD=$(curl -s https://api.papermc.io/v2/projects/paper/versions/$VERSION | jq -r '.builds[-1]')
-FILE="paper-$VERSION-$LATEST_BUILD.jar"
+echo "Última versión estable detectada: $VERSION"
+echo "Buscando lista de builds…"
 
-echo "Descargando PaperMC $VERSION build $LATEST_BUILD…"
+LATEST_BUILD=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$VERSION/builds" \
+  | jq -r '.builds[-1].build')
+
+echo "Build más reciente: $LATEST_BUILD"
+
+FILE=$(curl -s "https://api.papermc.io/v2/projects/paper/versions/$VERSION/builds/$LATEST_BUILD" \
+  | jq -r '.downloads.application.name')
+
+echo "Descargando PaperMC $VERSION (build $LATEST_BUILD)…"
 
 curl -Lo paper.jar \
 "https://api.papermc.io/v2/projects/paper/versions/$VERSION/builds/$LATEST_BUILD/downloads/$FILE"
 
-echo "Listo. Archivo: paper.jar"
+echo "Listo, señor Bonet. Archivo descargado como: paper.jar"
